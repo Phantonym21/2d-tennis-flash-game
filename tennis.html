@@ -1,0 +1,212 @@
+<html>
+
+<canvas id="gamecanvas" width = " 800" height = " 600 " ></canvas>
+<script>
+
+//Variables
+ 
+var canvas;     
+var canvasContext;
+var ballX=0;
+var ballY=0;
+var ballSpeedY=4;
+var ballSpeedX=4;
+var paddle1Y=250;
+var paddle2Y=250;
+var player1Score=0;
+var player2Score=0;
+var winScreen = false;
+const PADDLE_HEIGHT = 100;
+const PADDLE_WIDTH = 10;
+const WIN_SCORE= 3;
+
+
+
+// Restart game function 
+
+function mouseClick(evt){
+
+	if(winScreen){
+		player1Score=0;
+                player2Score=0;
+		winScreen=false;
+        }
+
+}
+// BALL RESET FUNCTION
+
+function ballReset() {
+	if(player1Score>= WIN_SCORE || player2Score>= WIN_SCORE){
+		// player1Score=0;
+		//  player2Score=0;
+	         winScreen = true;	
+			
+	}	
+	
+	ballSpeedX=-ballSpeedX;
+	ballSpeedY=4;
+	ballX=canvas.width/2;
+	ballY=canvas.height/2;
+}
+
+// for returning proper mouse positions 
+
+function calculateMousePos(evt) {
+
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement;
+	var mousex = evt.clientX - rect.left -root.scrollLeft;
+	var mousey = evt.clientY - rect.top - root.scrollTop;
+	return {
+		x:mousex,
+		y:mousey
+	};
+}
+
+// Main Function
+ 
+window.onload= function() {
+   	canvas = document.getElementById('gamecanvas');
+	canvasContext = canvas.getContext('2d');
+	var fps = 60;
+	setInterval(function() {
+	moveEverything();
+	drawEverything();
+	}, 1000/fps);
+
+	//for winscreen 	
+
+	canvas.addEventListener('mousedown', mouseClick);
+
+        // for moving paddle with mouse
+
+	
+	canvas.addEventListener('mousemove',
+		function(evt){
+			var mousePos = calculateMousePos(evt);
+			paddle1Y = mousePos.y-(PADDLE_HEIGHT/2);
+		});
+	
+}
+
+
+//COMPUTER PADDLE MOVEMENT FUNCTION
+
+
+function computerMovement() {
+	var paddle2YCenter = paddle2Y +(PADDLE_HEIGHT/2);
+
+	if( paddle2YCenter < ballY-35 && ballX>canvas.width/2){
+		paddle2Y+=7;
+	}else if( paddle2YCenter > ballY+35 && ballX>canvas.width/2){
+		paddle2Y-=7;
+	}
+
+}
+//Moving the Ball
+
+function moveEverything() {
+	if(winScreen){
+		return;
+	}  
+
+	computerMovement();
+
+	ballX=ballX+ballSpeedX; 
+	ballY=ballY+ballSpeedY;
+	if( ballX < 0 ) {
+		if(ballY > paddle1Y && ballY < paddle1Y + PADDLE_HEIGHT){
+			var deltaY = ballY - (paddle1Y + PADDLE_HEIGHT/2);
+			ballSpeedX=-ballSpeedX;
+			ballSpeedY= deltaY * 0.35;
+		} else {
+			player2Score++;  // SHOULD BE BEFORE BALL RESET
+			ballReset();
+			
+		}
+		
+	}
+	if( ballX > canvas.width){
+		if(ballY > paddle2Y && ballY < paddle2Y + PADDLE_HEIGHT){
+			var deltaY = ballY - (paddle2Y + PADDLE_HEIGHT/2);
+			ballSpeedX=-ballSpeedX;
+			ballSpeedY= deltaY * 0.35;
+		} else {
+			player1Score++;  // SHOULD BE BEFORE BALL RESET
+ 			ballReset();
+			
+		}
+	}
+	if( ballY < 0 ) {	
+		ballSpeedY = -ballSpeedY;
+		
+	}
+	if( ballY > canvas.height){
+		ballSpeedY = -ballSpeedY;
+	}
+}
+
+//NET
+
+function drawNet(){
+	for ( var i=0;i<canvas.height;i+=40){
+		colorRect(canvas.width/2-1,i,2,20,'yellow');
+		}
+}
+
+//Drawing The stuff
+function drawEverything() {
+	
+	// Black Screen
+	colorRect(0,0, canvas.width, canvas.height,'black');
+	
+	//Net
+
+	drawNet();			
+	
+	if(winScreen){
+		canvasContext.fillStyle = 'yellow';
+		if(player1Score>= WIN_SCORE){
+			canvasContext.fillText('player 1 won!!',100,100);}
+		if(player2Score>= WIN_SCORE){
+			canvasContext.fillText('player 2 won!!',100,100);}
+		canvasContext.fillText('Click to continue',canvas.width/2,100);
+		return;
+	}  
+	
+	
+	// Ball
+	circleColor(ballX, ballY, 10 , 'yellow');	
+
+	// Left Player Paddle
+	colorRect(0,paddle1Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'yellow');
+
+	// Right Player Paddle
+	colorRect(canvas.width-PADDLE_WIDTH,paddle2Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'yellow');
+
+        // ScoreBoard	
+	canvasContext.fillText(player1Score,100,100);
+	canvasContext.fillText(player2Score,canvas.width-100,100);
+
+	
+
+}
+// How to make a Circle
+
+function circleColor(centreX, centreY,r,color) {
+	canvasContext.fillStyle = color;
+	canvasContext.beginPath();
+	canvasContext.arc(centreX, centreY, r , 0,Math.PI*2,true);
+	canvasContext.fill();
+}
+
+
+
+// How to make Rectangle
+
+function colorRect(left,top, w, h, color){
+	canvasContext.fillStyle= color;
+	canvasContext.fillRect(left,top, w, h);
+}
+</script>
+</html>
